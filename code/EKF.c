@@ -336,6 +336,46 @@ static inline void IMU_QuaternionEKF_SetH(KalmanFilter_t *kf)
     kf->H_data[15] = doubleq3;
 }
 
+
+void Matrix_Multiply_3x6_6x6_to_3x6(const float A[18], const float B[36], float C[18]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            C[i * 6 + j] = 0;
+            for (int k = 0; k < 6; ++k) {
+                C[i * 6 + j] += A[i * 6 + k] * B[k * 6 + j];
+            }
+        }
+    }
+}
+void Matrix_Multiply_3x6_6x3_to_3x3(const float A[18], const float B[18], float C[9]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            C[i * 3 + j] = 0;
+            for (int k = 0; k < 6; ++k) {
+                C[i * 3 + j] += A[i * 6 + k] * B[k * 3 + j];
+            }
+        }
+    }
+}
+void Matrix_Multiply_6x6_6x3_to_6x3(const float A[36], const float B[18], float C[18]) {
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            C[i * 3 + j] = 0;
+            for (int k = 0; k < 6; ++k) {
+                C[i * 3 + j] += A[i * 6 + k] * B[k * 3 + j];
+            }
+        }
+    }
+}
+void Matrix_Multiply_6x3_3x1_to_6x1(const float A[18], const float B[3], float C[6]) {
+    for (int i = 0; i < 6; ++i) {
+        C[i] = 0;
+        for (int j = 0; j < 3; ++j) {
+            C[i] += A[i * 3 + j] * B[j];
+        }
+    }
+}
+
 /**
  * @brief 利用观测值和先验估计得到最优的后验估计
  *        加入了卡方检验以判断融合加速度的条件是否满足
@@ -357,6 +397,16 @@ static void IMU_QuaternionEKF_xhatUpdate(KalmanFilter_t *kf)
     kf->S.numRows = kf->R.numRows;
     kf->S.numCols = kf->R.numCols;
     kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
+    //kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix = H·P'(k)
+    kf->MatStatus=Matrix_Multiply_3x6_6x6_to_3x6(kf->H_data,kf->Pminus_data,kf->temp_matrix.pData);
+    kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+    kf->temp_matrix1.numCols = kf->HT.numCols;
+    //kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_matrix1 = H·P'(k)·HT
+    kf->MatStatus=Matrix_Multiply_3x6_6x3_to_3x3(kf->temp_matrix.pData,kf->HT_data,kf->temp_matrix1.pData);
+    kf->S.numRows = kf->R.numRows;
+    kf->S.numCols = kf->R.numCols;
+    kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
+
     kf->MatStatus = Matrix_Inverse(&kf->S, &kf->temp_matrix1);     // temp_matrix1 = inv(H·P'(k)·HT + R)
 
     q0 = kf->xhatminus_data[0];
@@ -443,8 +493,15 @@ static void IMU_QuaternionEKF_xhatUpdate(KalmanFilter_t *kf)
     // cal kf-gain K
     kf->temp_matrix.numRows = kf->Pminus.numRows;
     kf->temp_matrix.numCols = kf->HT.numCols;
+
     kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix = P'(k)·HT
     kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+
+
+   // kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix = P'(k)·HT
+    kf->MatStatus=Matrix_Multiply_6x6_6x3_to_6x3(kf->Pminus_data,kf->HT_data,kf->temp_matrix.pData);
+    //kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+    kf->MatStatus=Matrix_Multiply_6x3_3x1_to_6x1(kf->K_data,kf->temp_vector1.pData,kf->temp_vector.pData);
 
     // implement adaptive
     for (uint8_t i = 0; i < kf->K.numRows * kf->K.numCols; i++)

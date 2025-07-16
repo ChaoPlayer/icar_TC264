@@ -415,19 +415,19 @@ void Get_Attitude(void)
 
 
 //
-    //Mahony_update(imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.acc_x,  imudata.acc_y,  imudata.acc_z,0,0,0);
-////    Mahony_update(imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.acc_x,  imudata.acc_y,  imudata.acc_z,imudata.mag_x,imudata.mag_y,imudata.mag_z);
-//    Mahony_computeAngles();
-//        imudata.yaw   = DEGREE_TRANS(getYaw()); //MH
-//        imudata.pitch = DEGREE_TRANS(getPitch());
-//        imudata.roll  = DEGREE_TRANS(getRoll());
+    Mahony_update(imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.acc_x,  imudata.acc_y,  imudata.acc_z,0,0,0);
+    //Mahony_update(imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.acc_x,  imudata.acc_y,  imudata.acc_z,imudata.mag_x,imudata.mag_y,imudata.mag_z);
+    Mahony_computeAngles();
+        imudata.yaw   = DEGREE_TRANS(getYaw()); //MH
+        imudata.pitch = DEGREE_TRANS(getPitch());
+        imudata.roll  = DEGREE_TRANS(getRoll());
 //EKF
-   IMU_QuaternionEKF_Update(imudata.gyro_x*0.0174533f, imudata.gyro_y*0.0174533f, imudata.gyro_z*0.0174533f,imudata.acc_x,  imudata.acc_y,  imudata.acc_z);
+   //IMU_QuaternionEKF_Update(imudata.gyro_x*0.0174533f, imudata.gyro_y*0.0174533f, imudata.gyro_z*0.0174533f,imudata.acc_x,  imudata.acc_y,  imudata.acc_z);
 //              imudata.yaw=Get_Yaw();//EKFyaw
-              imudata.yaw   = DEGREE_TRANS(Get_Yaw()); //0-360
+             // imudata.yaw   = DEGREE_TRANS(Get_Yaw()); //0-360
 
-              imudata.roll=DEGREE_TRANS(Get_Roll());//EKFroll 0-360
-              imudata.pitch=Get_Pitch(); //EKFpitch
+             // imudata.roll=DEGREE_TRANS(Get_Roll());//EKFroll 0-360
+             // imudata.pitch=Get_Pitch(); //EKFpitch
 
 //    imu_data_process(imudata.acc_x,  imudata.acc_y,  imudata.acc_z,imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.mag_x,imudata.mag_y,imudata.mag_z);
 //    calculate_attitude(0.001);

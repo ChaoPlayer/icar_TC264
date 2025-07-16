@@ -3,6 +3,9 @@
 #include <math.h>
 #include "EKF.h"
 
+static float prev_yaw_deg = 0.0f;   // 记录最近一次合法的 Yaw（角度制）
+
+
 QEKF_INS_t QEKF_INS={0};
 
 const float IMU_QuaternionEKF_F[36] = {1, 0, 0, 0, 0, 0,
@@ -221,9 +224,28 @@ void IMU_QuaternionEKF_Update(float gx, float gy, float gz, float ax, float ay, 
     QEKF_INS.Roll = Ifx_LutAtan2F32_float32(QEKF_INS.q[0]*QEKF_INS.q[1] + QEKF_INS.q[2]*QEKF_INS.q[3], 0.5f - QEKF_INS.q[1]*QEKF_INS.q[1] - QEKF_INS.q[2]*QEKF_INS.q[2]);
     QEKF_INS.Roll  *=57.29578f;
     QEKF_INS.Pitch =57.29578f * asinf(-2.0f * (QEKF_INS.q[1]*QEKF_INS.q[3] - QEKF_INS.q[0]*QEKF_INS.q[2]));
+
+
       //arm_atan2_f32(QEKF_INS.q[1]*QEKF_INS.q[2] + QEKF_INS.q[0]*QEKF_INS.q[3], 0.5f - QEKF_INS.q[2]*QEKF_INS.q[2] - QEKF_INS.q[3]*QEKF_INS.q[3],&QEKF_INS.Yaw);
     QEKF_INS.Yaw = Ifx_LutAtan2F32_float32(QEKF_INS.q[1]*QEKF_INS.q[2] + QEKF_INS.q[0]*QEKF_INS.q[3], 0.5f - QEKF_INS.q[2]*QEKF_INS.q[2] - QEKF_INS.q[3]*QEKF_INS.q[3]);
     QEKF_INS.Yaw   *=57.29578f;
+
+    const float num   = QEKF_INS.q[1]*QEKF_INS.q[2] + QEKF_INS.q[0]*QEKF_INS.q[3];
+    const float denom = 0.5f - QEKF_INS.q[2]*QEKF_INS.q[2] - QEKF_INS.q[3]*QEKF_INS.q[3];
+
+//    /* --- 1. 检测 Pitch≈±90° 引起的分母接近 0 的奇异区 -------- */
+//    if (fabsf(denom) > 1e-4f)          /* 正常区：|denom|>阈值 */
+//    {
+//        QEKF_INS.Yaw = Ifx_LutAtan2F32_float32(num, denom) * 57.29578f;
+//        prev_yaw_deg = QEKF_INS.Yaw;   /* 记录本次合法值 */
+//    }
+//    else                                /* 奇异区：保持上次合法 Yaw */
+//    {
+//        QEKF_INS.Yaw = prev_yaw_deg;    /* 也可在此用磁力计 yaw 替代 */
+//    }
+//先调试手动矩阵再来动这个
+
+
     QEKF_INS.GyroBias[0] = QEKF_INS.IMU_QuaternionEKF.FilteredValue[4];
     QEKF_INS.GyroBias[1] = QEKF_INS.IMU_QuaternionEKF.FilteredValue[5];
     QEKF_INS.GyroBias[2] = 0; // 大部分时候z轴通天,无法观测yaw的漂移
@@ -397,12 +419,12 @@ static void IMU_QuaternionEKF_xhatUpdate(KalmanFilter_t *kf)
     kf->S.numRows = kf->R.numRows;
     kf->S.numCols = kf->R.numCols;
     kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
-    //kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix = H·P'(k)
-    kf->MatStatus=Matrix_Multiply_3x6_6x6_to_3x6(kf->H_data,kf->Pminus_data,kf->temp_matrix.pData);
+    kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix = H·P'(k)
+    //kf->MatStatus=Matrix_Multiply_3x6_6x6_to_3x6(kf->H_data,kf->Pminus_data,kf->temp_matrix.pData);
     kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
     kf->temp_matrix1.numCols = kf->HT.numCols;
-    //kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_matrix1 = H·P'(k)·HT
-    kf->MatStatus=Matrix_Multiply_3x6_6x3_to_3x3(kf->temp_matrix.pData,kf->HT_data,kf->temp_matrix1.pData);
+    kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_matrix1 = H·P'(k)·HT
+    //kf->MatStatus=Matrix_Multiply_3x6_6x3_to_3x3(kf->temp_matrix.pData,kf->HT_data,kf->temp_matrix1.pData);
     kf->S.numRows = kf->R.numRows;
     kf->S.numCols = kf->R.numCols;
     kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
@@ -498,10 +520,10 @@ static void IMU_QuaternionEKF_xhatUpdate(KalmanFilter_t *kf)
     kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
 
 
-   // kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix = P'(k)·HT
-    kf->MatStatus=Matrix_Multiply_6x6_6x3_to_6x3(kf->Pminus_data,kf->HT_data,kf->temp_matrix.pData);
-    //kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
-    kf->MatStatus=Matrix_Multiply_6x3_3x1_to_6x1(kf->K_data,kf->temp_vector1.pData,kf->temp_vector.pData);
+    kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix = P'(k)·HT
+    //kf->MatStatus=Matrix_Multiply_6x6_6x3_to_6x3(kf->Pminus_data,kf->HT_data,kf->temp_matrix.pData);
+    kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+    //kf->MatStatus=Matrix_Multiply_6x3_3x1_to_6x1(kf->K_data,kf->temp_vector1.pData,kf->temp_vector.pData);
 
     // implement adaptive
     for (uint8_t i = 0; i < kf->K.numRows * kf->K.numCols; i++)

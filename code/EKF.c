@@ -336,7 +336,7 @@ static inline void IMU_QuaternionEKF_SetH(KalmanFilter_t *kf)
     kf->H_data[15] = doubleq3;
 }
 
-
+//引入常量矩阵，能减少使用默认函数的时间
 void Matrix_Multiply_3x6_6x6_to_3x6(const float A[18], const float B[36], float C[18]) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 6; ++j) {
@@ -537,7 +537,7 @@ static void IMU_QuaternionEKF_xhatUpdate(KalmanFilter_t *kf)
     }
 
     // 不修正yaw轴数据
-    kf->temp_vector.pData[3] = 0;
+   // kf->temp_vector.pData[3] = 0;
     kf->MatStatus = Matrix_Add(&kf->xhatminus, &kf->temp_vector, &kf->xhat);
 }
 

@@ -418,9 +418,9 @@ void Get_Attitude(void)
     Mahony_update(imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.acc_x,  imudata.acc_y,  imudata.acc_z,0,0,0);
     //Mahony_update(imudata.gyro_x, imudata.gyro_y, imudata.gyro_z,imudata.acc_x,  imudata.acc_y,  imudata.acc_z,imudata.mag_x,imudata.mag_y,imudata.mag_z);
     Mahony_computeAngles();
-        imudata.yaw   = DEGREE_TRANS(getYaw()); //MH
-        imudata.pitch = DEGREE_TRANS(getPitch());
-        imudata.roll  = DEGREE_TRANS(getRoll());
+        imudata.yaw   = DEGREE_TRANS(getYaw()); //MH，pitch和roll已被禁用
+        //imudata.pitch = DEGREE_TRANS(getPitch());
+        //imudata.roll  = DEGREE_TRANS(getRoll());
 //EKF
    //IMU_QuaternionEKF_Update(imudata.gyro_x*0.0174533f, imudata.gyro_y*0.0174533f, imudata.gyro_z*0.0174533f,imudata.acc_x,  imudata.acc_y,  imudata.acc_z);
 //              imudata.yaw=Get_Yaw();//EKFyaw

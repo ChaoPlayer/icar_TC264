@@ -302,12 +302,12 @@ void Mahony_computeAngles()
     anglesComputed = 1;
 }
 float getRoll() {
-    if (!anglesComputed) Mahony_computeAngles();
-    return roll_mahony;
-}
+    //if (!anglesComputed) Mahony_computeAngles();
+    //return roll_mahony;
+}//禁用roll和pitch，提高解算效率
 float getPitch() {
-    if (!anglesComputed) Mahony_computeAngles();
-    return pitch_mahony;
+    //if (!anglesComputed) Mahony_computeAngles();
+   //return pitch_mahony;
 }
 float getYaw() {
     if (!anglesComputed) Mahony_computeAngles();

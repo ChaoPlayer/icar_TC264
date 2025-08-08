@@ -76,21 +76,21 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
 }
 
 
-IFX_INTERRUPT(cc61_pit_ch0_isr,0, CCU6_1_CH0_ISR_PRIORITY)
+IFX_INTERRUPT(cc61_pit_ch0_isr,1, CCU6_1_CH0_ISR_PRIORITY)//×¢²áÍÓÂÝÒÇÖÐ¶ÏÔÚ´ÎºË
 {
 
     interrupt_global_enable(0);                     // ¿ªÆôÖÐ¶ÏÇ¶Ì×
-    pit_clear_flag(CCU61_CH0);
+    pit_clear_flag(CCU61_CH1);
     imufunc.Get_Attitude(); //Imu
     //USB_Edgeboard_send_angle(imudata.yaw);
     //printf("%f,%f,%f\n",imudata.yaw,imudata.pitch,imudata.roll);
 
 }
 
-IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)
+IFX_INTERRUPT(cc61_pit_ch1_isr, 1, CCU6_1_CH1_ISR_PRIORITY)
 {                                                   //100ms
     interrupt_global_enable(0);                     // ¿ªÆôÖÐ¶ÏÇ¶Ì×
-    pit_clear_flag(CCU61_CH1);
+    pit_clear_flag(CCU61_CH0);
     USB_Edgeboard_send_angle(imudata.yaw);
     //printf("%f,%f,%f\n",imudata.yaw,imudata.pitch,imudata.roll);
 

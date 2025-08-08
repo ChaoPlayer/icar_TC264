@@ -31,8 +31,8 @@ int core0_main(void)
 
     PIT_init();  //中断初始化
 //
-      imu_init();
-      pit_ms_init(CCU61_CH0,1);
+      //imu_init();//imu转至次核进行运算
+      //pit_ms_init(CCU61_CH0,1);
       pit_ms_init(CCU61_CH1,5);
       Icar_init(); //参数初始化
     bee_time = 100;

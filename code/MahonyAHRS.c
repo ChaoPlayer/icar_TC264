@@ -11,7 +11,7 @@ uint8_t anglesComputed;
 
 //#define twoKpDef    (2.0f * 0.5f)   // 2 * proportional gain
 #define twoKpDef    (2.0f * 0.5f)   // 2 * proportional gain
-#define twoKiDef    (2.0f * 0.0f)   // 2 * integral gain
+#define twoKiDef    (2.0f * 0.05f)   // 2 * integral gain
 
 static float invSqrt(float x)
 {

@@ -138,6 +138,10 @@ void USB_Edgeboard_Timr(void)
 * @note
 **/
 int bee_type = 0;
+
+void USB_Edgeboard_send_encode(float encode_data){
+
+}
 void USB_Edgeboard_Handle(void)
 {
 
@@ -203,6 +207,8 @@ void USB_Edgeboard_send_angle(float angle_intergral){
     uint8_t check = 0;
     uint8_t buff[8];
     Bint32_Union bint32_Union;
+
+
     buff[0] = 0x42; //帧头
     buff[1] = USB_ADDR_Angle; //地址
     buff[2] = 0x08; //帧长

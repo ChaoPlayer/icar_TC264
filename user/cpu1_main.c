@@ -51,8 +51,8 @@ void core1_main(void)
 //    gpio_init(IMU963RA_CS_PIN, GPO, GPIO_LOW, GPO_PUSH_PULL);
 //    gpio_set_level(IMU963RA_CS_PIN,GPIO_LOW);
 
-    //imu_init();
-    //pit_ms_init(CCU61_CH0,5);
+    imu_init();
+    pit_ms_init(CCU61_CH1,1);
     // 此处编写用户代码 例如外设初始化代码等
 
     cpu_wait_event_ready();                 // 等待所有核心初始化完毕
